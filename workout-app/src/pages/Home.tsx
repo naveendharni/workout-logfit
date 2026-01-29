@@ -24,7 +24,7 @@ export default function Home() {
         <h1 id="brand-title" className="text-5xl font-bold text-[#fafafa] leading-none tracking-tight">
           logfit<span className="text-[#c8ff00]">.</span>io
         </h1>
-        <p id="tagline" className="text-[#737373] mt-2 text-sm">Push your limits. Track your gains.</p>
+        <p id="tagline" className="text-[#737373] mt-2 text-sm">Track your gains.</p>
       </header>
 
       {/* Hero Start Button */}
