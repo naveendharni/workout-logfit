@@ -2,17 +2,24 @@
 
 @import "tailwindcss";
 
-:root {
+@theme {
   --color-bg: #0a0a0a;
   --color-surface: #111111;
   --color-surface-elevated: #1a1a1a;
   --color-border: #252525;
-  --color-text: #fafafa;
-  --color-text-muted: #737373;
+  --color-foreground: #fafafa;
+  --color-muted: #737373;
   --color-accent: #c8ff00;
   --color-accent-dim: #9fcc00;
   --color-danger: #ff3b3b;
   --color-success: #00ff88;
+  --color-success-dim: #00cc6a;
+  --color-warning: #ff6b35;
+  --color-info: #00d4ff;
+  --color-gold: #ffd000;
+}
+
+:root {
   --gradient-glow: radial-gradient(ellipse at 50% 0%, rgba(200, 255, 0, 0.15) 0%, transparent 60%);
   --gradient-mesh:
     radial-gradient(at 40% 20%, rgba(200, 255, 0, 0.03) 0px, transparent 50%),
@@ -23,7 +30,7 @@
 body {
   font-family: 'Outfit', system-ui, sans-serif;
   background: var(--color-bg);
-  color: var(--color-text);
+  color: var(--color-foreground);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
@@ -57,7 +64,7 @@ body::before {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-text-muted);
+  background: var(--color-muted);
 }
 
 /* Typography classes */
@@ -141,19 +148,28 @@ body::before {
 
 /* Card styles */
 .card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  transition: all 0.2s ease;
-}
-
-.card:hover {
-  border-color: rgba(200, 255, 0, 0.3);
-  background: var(--color-surface-elevated);
+  @apply bg-surface rounded-2xl border border-border overflow-hidden hover:border-accent/20 hover:bg-surface-elevated transition-all duration-200;
 }
 
 .card-elevated {
-  background: var(--color-surface-elevated);
-  border: 1px solid var(--color-border);
+  @apply bg-surface-elevated border border-border;
+}
+
+/* Reusable component classes */
+.btn-control {
+  @apply p-2.5 rounded-lg bg-border hover:bg-accent/20 text-muted hover:text-accent transition-all duration-150 active:scale-95;
+}
+
+.input-number {
+  @apply bg-border rounded-lg px-3 py-2.5 text-center text-base font-mono font-semibold text-foreground focus:ring-2 focus:ring-accent/50;
+}
+
+.label-caption {
+  @apply text-xs font-medium text-muted tracking-widest uppercase;
+}
+
+.btn-pill {
+  @apply px-4 py-2 rounded-full text-xs font-semibold tracking-wider transition-all duration-200;
 }
 
 /* Button base */

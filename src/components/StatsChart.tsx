@@ -39,18 +39,18 @@ export default function StatsChart({ workouts, days = 7 }: StatsChartProps) {
   const activeDays = data.filter(d => d.hasWorkout).length;
 
   return (
-    <div className="bg-[#111111] rounded-2xl p-5 border border-[#252525]">
+    <div className="bg-surface rounded-2xl p-5 border border-border">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="text-[10px] text-[#737373] tracking-widest uppercase mb-1">WEEKLY VOLUME</h3>
-          <p className="font-display text-2xl text-[#fafafa]">
-            {(totalVolume / 1000).toFixed(1)}k <span className="text-sm text-[#737373]">lbs</span>
+          <h3 className="text-[10px] text-muted tracking-widest uppercase mb-1">WEEKLY VOLUME</h3>
+          <p className="font-display text-2xl text-foreground">
+            {(totalVolume / 1000).toFixed(1)}k <span className="text-sm text-muted">lbs</span>
           </p>
         </div>
         <div className="text-right">
-          <p className="text-[10px] text-[#737373] tracking-widest uppercase mb-1">ACTIVE DAYS</p>
-          <p className="font-display text-2xl text-[#c8ff00]">{activeDays}<span className="text-sm text-[#737373]">/{days}</span></p>
+          <p className="text-[10px] text-muted tracking-widest uppercase mb-1">ACTIVE DAYS</p>
+          <p className="font-display text-2xl text-accent">{activeDays}<span className="text-sm text-muted">/{days}</span></p>
         </div>
       </div>
 
@@ -65,8 +65,8 @@ export default function StatsChart({ workouts, days = 7 }: StatsChartProps) {
               <div className="w-full flex flex-col items-center justify-end h-24 relative">
                 {/* Hover tooltip */}
                 {volume > 0 && (
-                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-[#1a1a1a] border border-[#252525] rounded-lg px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10">
-                    <span className="text-xs font-mono text-[#c8ff00]">{volume.toLocaleString()} lbs</span>
+                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-surface-elevated border border-border rounded-lg px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10">
+                    <span className="text-xs font-mono text-accent">{volume.toLocaleString()} lbs</span>
                   </div>
                 )}
 
@@ -74,9 +74,9 @@ export default function StatsChart({ workouts, days = 7 }: StatsChartProps) {
                 <div
                   className={`w-full rounded-t-lg transition-all duration-500 ease-out ${
                     hasWorkout
-                      ? 'bg-gradient-to-t from-[#c8ff00] to-[#9fcc00]'
-                      : 'bg-[#252525]'
-                  } ${isToday ? 'ring-2 ring-[#c8ff00]/30 ring-offset-2 ring-offset-[#111111]' : ''}`}
+                      ? 'bg-gradient-to-t from-accent to-accent-dim'
+                      : 'bg-border'
+                  } ${isToday ? 'ring-2 ring-accent/30 ring-offset-2 ring-offset-surface' : ''}`}
                   style={{
                     height: hasWorkout ? `${Math.max(heightPercent, 8)}%` : '4px',
                     minHeight: hasWorkout ? '8px' : '4px',
@@ -86,7 +86,7 @@ export default function StatsChart({ workouts, days = 7 }: StatsChartProps) {
 
               {/* Day label */}
               <span className={`text-[10px] font-medium tracking-wider ${
-                isToday ? 'text-[#c8ff00]' : hasWorkout ? 'text-[#fafafa]' : 'text-[#737373]'
+                isToday ? 'text-accent' : hasWorkout ? 'text-foreground' : 'text-muted'
               }`}>
                 {label.toUpperCase()}
               </span>

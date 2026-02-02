@@ -17,11 +17,11 @@ export default function Stats() {
       {/* Header */}
       <header id="stats-header" className="mb-8 animate-slide-up opacity-0" style={{ animationDelay: '0s', animationFillMode: 'forwards' }}>
         <div id="stats-status" className="flex items-center gap-2 mb-1">
-          <div className="w-2 h-2 rounded-full bg-[#ffd000]" />
-          <span className="text-xs font-medium text-[#737373] tracking-widest uppercase">Analytics</span>
+          <div className="w-2 h-2 rounded-full bg-gold" />
+          <span className="text-xs font-medium text-muted tracking-widest uppercase">Analytics</span>
         </div>
-        <h1 id="stats-title" className="font-display text-5xl text-[#fafafa] leading-none">
-          STATS<span className="text-[#c8ff00]">.</span>
+        <h1 id="stats-title" className="font-display text-5xl text-foreground leading-none">
+          STATS<span className="text-accent">.</span>
         </h1>
       </header>
 
@@ -74,30 +74,30 @@ export default function Stats() {
           style={{ animationDelay: '0.35s', animationFillMode: 'forwards' }}
         >
           <div id="personal-records-header" className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-lg bg-[#ffd000]/20 flex items-center justify-center">
-              <Trophy size={16} className="text-[#ffd000]" />
+            <div className="w-8 h-8 rounded-lg bg-gold/20 flex items-center justify-center">
+              <Trophy size={16} className="text-gold" />
             </div>
-            <h2 className="font-display text-xl text-[#fafafa] tracking-wide">PERSONAL RECORDS</h2>
+            <h2 className="font-display text-xl text-foreground tracking-wide">PERSONAL RECORDS</h2>
           </div>
 
           <div id="personal-records-list" className="space-y-2">
             {personalRecords.map((pr, index) => (
               <div
                 key={pr.exercise}
-                className="group bg-[#111111] rounded-xl p-4 border border-[#252525] flex items-center justify-between hover:border-[#ffd000]/30 transition-all duration-200"
+                className="group bg-surface rounded-xl p-4 border border-border flex items-center justify-between hover:border-gold/30 transition-all duration-200"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#ffd000]/20 to-[#ff6b35]/20 flex items-center justify-center">
-                    <span className="font-display text-lg text-[#ffd000]">#{index + 1}</span>
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gold/20 to-warning/20 flex items-center justify-center">
+                    <span className="font-display text-lg text-gold">#{index + 1}</span>
                   </div>
                   <div>
-                    <p className="font-semibold text-[#fafafa]">{pr.exercise}</p>
-                    <p className="text-xs text-[#737373]">Best set</p>
+                    <p className="font-semibold text-foreground">{pr.exercise}</p>
+                    <p className="text-xs text-muted">Best set</p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-display text-2xl text-[#c8ff00]">{pr.weight}<span className="text-sm text-[#737373] ml-1">lbs</span></p>
-                  <p className="text-xs text-[#737373]">× {pr.reps} reps</p>
+                  <p className="font-display text-2xl text-accent">{pr.weight}<span className="text-sm text-muted ml-1">lbs</span></p>
+                  <p className="text-xs text-muted">× {pr.reps} reps</p>
                 </div>
               </div>
             ))}
@@ -112,11 +112,11 @@ export default function Stats() {
           className="text-center py-16 animate-fade-in opacity-0"
           style={{ animationDelay: '0.3s', animationFillMode: 'forwards' }}
         >
-          <div id="stats-empty-icon" className="w-16 h-16 rounded-full bg-[#1a1a1a] border border-[#252525] flex items-center justify-center mx-auto mb-4">
-            <TrendingUp size={28} className="text-[#737373]" />
+          <div id="stats-empty-icon" className="w-16 h-16 rounded-full bg-surface-elevated border border-border flex items-center justify-center mx-auto mb-4">
+            <TrendingUp size={28} className="text-muted" />
           </div>
-          <p className="text-[#fafafa] font-medium mb-1">No stats yet</p>
-          <p className="text-sm text-[#737373]">Complete workouts to see your progress</p>
+          <p className="text-foreground font-medium mb-1">No stats yet</p>
+          <p className="text-sm text-muted">Complete workouts to see your progress</p>
         </div>
       )}
     </div>
@@ -138,7 +138,7 @@ function StatCard({
 }) {
   return (
     <div
-      className="group bg-[#111111] border border-[#252525] rounded-xl p-4 hover:border-[#c8ff00]/20 transition-all duration-200 animate-slide-up opacity-0"
+      className="group bg-surface border border-border rounded-xl p-4 hover:border-accent/20 transition-all duration-200 animate-slide-up opacity-0"
       style={{ animationDelay: `${delay}s`, animationFillMode: 'forwards' }}
     >
       <div
@@ -147,8 +147,8 @@ function StatCard({
       >
         {icon}
       </div>
-      <p className="font-display text-3xl text-[#fafafa] leading-none">{value}</p>
-      <p className="text-[10px] text-[#737373] tracking-widest mt-1.5 font-medium">{label}</p>
+      <p className="font-display text-3xl text-foreground leading-none">{value}</p>
+      <p className="text-[10px] text-muted tracking-widest mt-1.5 font-medium">{label}</p>
     </div>
   );
 }

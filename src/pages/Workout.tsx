@@ -104,16 +104,16 @@ export default function WorkoutPage() {
       <header id="workout-header" className="flex items-center justify-between mb-6">
         <div id="workout-info">
           <div id="workout-title-row" className="flex items-center gap-3 mb-1">
-            <h1 className="font-display text-3xl text-[#fafafa] tracking-wide">ACTIVE SESSION</h1>
-            <div id="live-indicator" className="flex items-center gap-1.5 px-2 py-0.5 bg-[#c8ff00]/10 rounded-full">
-              <div className="w-1.5 h-1.5 rounded-full bg-[#c8ff00] animate-pulse" />
-              <span className="text-[10px] font-bold text-[#c8ff00] tracking-wider">LIVE</span>
+            <h1 className="font-display text-3xl text-foreground tracking-wide">ACTIVE SESSION</h1>
+            <div id="live-indicator" className="flex items-center gap-1.5 px-2 py-0.5 bg-accent/10 rounded-full">
+              <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+              <span className="text-[10px] font-bold text-accent tracking-wider">LIVE</span>
             </div>
           </div>
-          <div id="workout-stats" className="flex items-center gap-4 text-sm text-[#737373]">
-            <span id="workout-timer" className="font-mono text-[#c8ff00] font-semibold">{formatTime(seconds)}</span>
+          <div id="workout-stats" className="flex items-center gap-4 text-sm text-muted">
+            <span id="workout-timer" className="font-mono text-accent font-semibold">{formatTime(seconds)}</span>
             <span id="workout-sets-count" className="flex items-center gap-1">
-              <Check size={14} className="text-[#00ff88]" />
+              <Check size={14} className="text-success" />
               {completedSets}/{totalSets} sets
             </span>
           </div>
@@ -121,7 +121,7 @@ export default function WorkoutPage() {
         <button
           id="cancel-workout-btn"
           onClick={cancelWorkout}
-          className="p-3 rounded-xl bg-[#1a1a1a] border border-[#252525] text-[#737373] hover:text-[#ff3b3b] hover:border-[#ff3b3b]/30 transition-all duration-200 active:scale-95"
+          className="p-3 rounded-xl bg-surface-elevated border border-border text-muted hover:text-danger hover:border-danger/30 transition-all duration-200 active:scale-95"
         >
           <X size={22} />
         </button>
@@ -133,8 +133,8 @@ export default function WorkoutPage() {
         onClick={() => setShowRestTimer(!showRestTimer)}
         className={`w-full mb-5 py-4 px-5 rounded-xl border flex items-center justify-between transition-all duration-200 active:scale-[0.99] ${
           showRestTimer
-            ? 'bg-[#c8ff00]/10 border-[#c8ff00]/30 text-[#c8ff00]'
-            : 'bg-[#111111] border-[#252525] text-[#737373] hover:border-[#c8ff00]/20'
+            ? 'bg-accent/10 border-accent/30 text-accent'
+            : 'bg-surface border-border text-muted hover:border-accent/20'
         }`}
       >
         <div className="flex items-center gap-3">
@@ -174,12 +174,12 @@ export default function WorkoutPage() {
       <button
         id="add-exercise-btn"
         onClick={() => setShowExerciseModal(true)}
-        className="group w-full py-6 rounded-2xl bg-[#111111] border-2 border-dashed border-[#252525] hover:border-[#c8ff00]/50 hover:bg-[#1a1a1a] transition-all duration-200 flex items-center justify-center gap-3 active:scale-[0.99]"
+        className="group w-full py-6 rounded-2xl bg-surface border-2 border-dashed border-border hover:border-accent/50 hover:bg-surface-elevated transition-all duration-200 flex items-center justify-center gap-3 active:scale-[0.99]"
       >
-        <div className="w-10 h-10 rounded-xl bg-[#1a1a1a] group-hover:bg-[#c8ff00]/20 flex items-center justify-center transition-colors duration-200">
-          <Plus size={22} className="text-[#737373] group-hover:text-[#c8ff00] transition-colors duration-200" />
+        <div className="w-10 h-10 rounded-xl bg-surface-elevated group-hover:bg-accent/20 flex items-center justify-center transition-colors duration-200">
+          <Plus size={22} className="text-muted group-hover:text-accent transition-colors duration-200" />
         </div>
-        <span className="text-[#737373] group-hover:text-[#fafafa] font-medium text-lg transition-colors duration-200">
+        <span className="text-muted group-hover:text-foreground font-medium text-lg transition-colors duration-200">
           Add Exercise
         </span>
       </button>
@@ -193,9 +193,9 @@ export default function WorkoutPage() {
             className="group relative w-full active:scale-[0.98] transition-transform duration-150"
           >
             {/* Glow */}
-            <div id="finish-btn-glow" className="absolute inset-0 bg-[#00ff88]/20 rounded-2xl blur-xl group-hover:bg-[#00ff88]/30 transition-all duration-300" />
+            <div id="finish-btn-glow" className="absolute inset-0 bg-success/20 rounded-2xl blur-xl group-hover:bg-success/30 transition-all duration-300" />
 
-            <div id="finish-btn-content" className="relative bg-gradient-to-r from-[#00ff88] to-[#00cc6a] rounded-2xl py-5 px-8 flex items-center justify-center gap-4 text-black font-semibold text-lg">
+            <div id="finish-btn-content" className="relative bg-gradient-to-r from-success to-success-dim rounded-2xl py-5 px-8 flex items-center justify-center gap-4 text-black font-semibold text-lg">
               <Check size={26} strokeWidth={2.5} />
               <span className="font-display text-2xl tracking-wide">FINISH WORKOUT</span>
             </div>
@@ -234,14 +234,14 @@ function ExerciseModal({
 
   return (
     <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-end animate-fade-in">
-      <div className="w-full max-h-[90vh] bg-[#0a0a0a] rounded-t-3xl overflow-hidden flex flex-col border-t border-[#252525] animate-slide-up">
+      <div className="w-full max-h-[90vh] bg-bg rounded-t-3xl overflow-hidden flex flex-col border-t border-border animate-slide-up">
         {/* Header */}
-        <div className="p-5 border-b border-[#252525]">
+        <div className="p-5 border-b border-border">
           <div className="flex items-center justify-between mb-5">
-            <h2 className="font-display text-2xl text-[#fafafa] tracking-wide">ADD EXERCISE</h2>
+            <h2 className="font-display text-2xl text-foreground tracking-wide">ADD EXERCISE</h2>
             <button
               onClick={onClose}
-              className="p-2 rounded-xl bg-[#1a1a1a] border border-[#252525] text-[#737373] hover:text-white hover:border-[#c8ff00]/30 transition-all duration-200"
+              className="p-2 rounded-xl bg-surface-elevated border border-border text-muted hover:text-white hover:border-accent/30 transition-all duration-200"
             >
               <X size={20} />
             </button>
@@ -249,13 +249,13 @@ function ExerciseModal({
 
           {/* Search */}
           <div className="relative mb-4">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#737373]" size={18} />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted" size={18} />
             <input
               type="text"
               placeholder="Search exercises..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full bg-[#111111] border border-[#252525] rounded-xl pl-11 pr-4 py-3.5 text-[#fafafa] placeholder-[#737373] focus:border-[#c8ff00]/50 transition-colors duration-200"
+              className="w-full bg-surface border border-border rounded-xl pl-11 pr-4 py-3.5 text-foreground placeholder-muted focus:border-accent/50 transition-colors duration-200"
             />
           </div>
 
@@ -263,10 +263,10 @@ function ExerciseModal({
           <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
             <button
               onClick={() => setSelectedCategory(null)}
-              className={`px-4 py-2 rounded-full text-xs font-semibold tracking-wider whitespace-nowrap transition-all duration-200 ${
+              className={`btn-pill whitespace-nowrap ${
                 !selectedCategory
-                  ? 'bg-[#c8ff00] text-black'
-                  : 'bg-[#1a1a1a] text-[#737373] border border-[#252525] hover:border-[#c8ff00]/30 hover:text-[#fafafa]'
+                  ? 'bg-accent text-black'
+                  : 'bg-surface-elevated text-muted border border-border hover:border-accent/30 hover:text-foreground'
               }`}
             >
               ALL
@@ -275,10 +275,10 @@ function ExerciseModal({
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                className={`px-4 py-2 rounded-full text-xs font-semibold tracking-wider uppercase whitespace-nowrap transition-all duration-200 ${
+                className={`btn-pill uppercase whitespace-nowrap ${
                   selectedCategory === cat
-                    ? 'bg-[#c8ff00] text-black'
-                    : 'bg-[#1a1a1a] text-[#737373] border border-[#252525] hover:border-[#c8ff00]/30 hover:text-[#fafafa]'
+                    ? 'bg-accent text-black'
+                    : 'bg-surface-elevated text-muted border border-border hover:border-accent/30 hover:text-foreground'
                 }`}
               >
                 {cat}
@@ -294,17 +294,17 @@ function ExerciseModal({
               <button
                 key={exercise.id}
                 onClick={() => onSelect(exercise)}
-                className="group w-full text-left p-4 rounded-xl bg-[#111111] border border-[#252525] hover:border-[#c8ff00]/30 hover:bg-[#1a1a1a] transition-all duration-200 animate-fade-in opacity-0"
+                className="group w-full text-left p-4 rounded-xl bg-surface border border-border hover:border-accent/30 hover:bg-surface-elevated transition-all duration-200 animate-fade-in opacity-0"
                 style={{ animationDelay: `${index * 0.02}s`, animationFillMode: 'forwards' }}
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-semibold text-[#fafafa] group-hover:text-[#c8ff00] transition-colors duration-200">
+                    <p className="font-semibold text-foreground group-hover:text-accent transition-colors duration-200">
                       {exercise.name}
                     </p>
-                    <p className="text-xs text-[#737373] uppercase tracking-wider mt-0.5">{exercise.category}</p>
+                    <p className="text-xs text-muted uppercase tracking-wider mt-0.5">{exercise.category}</p>
                   </div>
-                  <Plus size={18} className="text-[#737373] group-hover:text-[#c8ff00] transition-colors duration-200" />
+                  <Plus size={18} className="text-muted group-hover:text-accent transition-colors duration-200" />
                 </div>
               </button>
             ))}

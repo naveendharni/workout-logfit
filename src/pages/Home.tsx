@@ -18,13 +18,13 @@ export default function Home() {
       {/* Header with dramatic typography */}
       <header id="home-header" className="mb-4 animate-slide-up opacity-0" style={{ animationDelay: '0s', animationFillMode: 'forwards' }}>
         <div id="status-indicator" className="flex items-center gap-2 mb-1">
-          <div className="w-2 h-2 rounded-full bg-[#c8ff00] animate-pulse" />
-          <span className="text-xs font-medium text-[#737373] tracking-widest uppercase">Ready to train</span>
+          <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+          <span className="text-xs font-medium text-muted tracking-widest uppercase">Ready to train</span>
         </div>
-        <h1 id="brand-title" className="text-5xl font-bold text-[#fafafa] leading-none tracking-tight">
-          logfit<span className="text-[#c8ff00]">.</span>io
+        <h1 id="brand-title" className="text-5xl font-bold text-foreground leading-none tracking-tight">
+          logfit<span className="text-accent">.</span>io
         </h1>
-        <p id="tagline" className="text-[#737373] mt-2 text-sm">Track your gains.</p>
+        <p id="tagline" className="text-muted mt-2 text-sm">Track your gains.</p>
       </header>
 
       {/* Hero Start Button */}
@@ -35,10 +35,10 @@ export default function Home() {
         style={{ animationDelay: '0.1s', animationFillMode: 'forwards' }}
       >
         {/* Glow effect */}
-        <div id="btn-glow" className="absolute inset-0 bg-[#c8ff00]/20 rounded-2xl blur-xl group-hover:bg-[#c8ff00]/30 transition-all duration-300" />
+        <div id="btn-glow" className="absolute inset-0 bg-accent/20 rounded-2xl blur-xl group-hover:bg-accent/30 transition-all duration-300" />
 
         {/* Button content */}
-        <div id="btn-content" className="relative bg-gradient-to-br from-[#c8ff00] to-[#9fcc00] rounded-3xl p-6 flex items-center justify-between overflow-hidden">
+        <div id="btn-content" className="relative bg-gradient-to-br from-accent to-accent-dim rounded-3xl p-6 flex items-center justify-between overflow-hidden">
           {/* Geometric accent */}
           <div id="accent-top" className="absolute top-0 right-0 w-40 h-40 bg-black/10 rounded-full -translate-y-1/2 translate-x-1/2" />
           <div id="accent-bottom" className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2" />
@@ -98,11 +98,11 @@ export default function Home() {
           style={{ animationDelay: '0.35s', animationFillMode: 'forwards' }}
         >
           <div id="last-workout-header" className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold text-[#737373] tracking-widest">LAST SESSION</span>
+            <span className="text-xs font-semibold text-muted tracking-widest">LAST SESSION</span>
             <button
               id="view-all-btn"
               onClick={() => navigate('/history')}
-              className="flex items-center gap-1 text-xs text-[#c8ff00] font-medium hover:underline"
+              className="flex items-center gap-1 text-xs text-accent font-medium hover:underline"
             >
               View All <ChevronRight size={14} />
             </button>
@@ -110,12 +110,12 @@ export default function Home() {
 
           <div
             id="last-workout-card"
-            className="group bg-[#111111] border border-[#252525] rounded-xl p-5 hover:border-[#c8ff00]/30 transition-all duration-200 cursor-pointer"
+            className="group bg-surface border border-border rounded-xl p-5 hover:border-accent/30 transition-all duration-200 cursor-pointer"
             onClick={() => navigate('/history')}
           >
             <div id="last-workout-content" className="flex justify-between items-start">
               <div id="last-workout-info">
-                <p className="font-semibold text-lg text-[#fafafa]">
+                <p className="font-semibold text-lg text-foreground">
                   {new Date(lastWorkout.date).toLocaleDateString('en-US', {
                     weekday: 'long',
                     month: 'short',
@@ -123,17 +123,17 @@ export default function Home() {
                   })}
                 </p>
                 <div id="last-workout-stats" className="flex items-center gap-3 mt-2">
-                  <span className="flex items-center gap-1.5 text-sm text-[#737373]">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#c8ff00]" />
+                  <span className="flex items-center gap-1.5 text-sm text-muted">
+                    <div className="w-1.5 h-1.5 rounded-full bg-accent" />
                     {lastWorkout.exercises.length} exercises
                   </span>
-                  <span className="flex items-center gap-1.5 text-sm text-[#737373]">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#00d4ff]" />
+                  <span className="flex items-center gap-1.5 text-sm text-muted">
+                    <div className="w-1.5 h-1.5 rounded-full bg-info" />
                     {lastWorkout.exercises.reduce((acc, e) => acc + e.sets.filter(s => s.completed).length, 0)} sets
                   </span>
                 </div>
               </div>
-              <ChevronRight size={20} className="text-[#737373] group-hover:text-[#c8ff00] group-hover:translate-x-1 transition-all duration-200" />
+              <ChevronRight size={20} className="text-muted group-hover:text-accent group-hover:translate-x-1 transition-all duration-200" />
             </div>
           </div>
         </div>
@@ -146,11 +146,11 @@ export default function Home() {
           className="text-center py-16 animate-fade-in opacity-0"
           style={{ animationDelay: '0.3s', animationFillMode: 'forwards' }}
         >
-          <div id="empty-icon" className="w-16 h-16 rounded-full bg-[#1a1a1a] border border-[#252525] flex items-center justify-center mx-auto mb-4">
-            <Flame size={28} className="text-[#737373]" />
+          <div id="empty-icon" className="w-16 h-16 rounded-full bg-surface-elevated border border-border flex items-center justify-center mx-auto mb-4">
+            <Flame size={28} className="text-muted" />
           </div>
-          <p className="text-[#fafafa] font-medium mb-1">No workouts yet</p>
-          <p className="text-sm text-[#737373]">Start your first session to track progress</p>
+          <p className="text-foreground font-medium mb-1">No workouts yet</p>
+          <p className="text-sm text-muted">Start your first session to track progress</p>
         </div>
       )}
     </div>
@@ -175,7 +175,7 @@ function StatCard({
   return (
     <div
       id={id}
-      className="group bg-[#111111] border border-[#252525] rounded-xl p-5 hover:border-[#c8ff00]/20 transition-all duration-200 animate-slide-up opacity-0"
+      className="group bg-surface border border-border rounded-xl p-5 hover:border-accent/20 transition-all duration-200 animate-slide-up opacity-0"
       style={{ animationDelay: `${delay}s`, animationFillMode: 'forwards' }}
     >
       <div
@@ -185,8 +185,8 @@ function StatCard({
       >
         {icon}
       </div>
-      <p id={`${id}-value`} className="font-display text-4xl text-[#fafafa] leading-none">{value}</p>
-      <p id={`${id}-label`} className="text-[11px] text-[#737373] tracking-widest mt-2 font-medium">{label}</p>
+      <p id={`${id}-value`} className="font-display text-4xl text-foreground leading-none">{value}</p>
+      <p id={`${id}-label`} className="text-[11px] text-muted tracking-widest mt-2 font-medium">{label}</p>
     </div>
   );
 }

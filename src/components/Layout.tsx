@@ -18,9 +18,9 @@ export default function Layout() {
       {/* Bottom Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 z-40">
         {/* Gradient fade above nav */}
-        <div className="absolute -top-8 left-0 right-0 h-8 bg-gradient-to-t from-[#0a0a0a] to-transparent pointer-events-none" />
+        <div className="absolute -top-8 left-0 right-0 h-8 bg-gradient-to-t from-bg to-transparent pointer-events-none" />
 
-        <div className="bg-[#0a0a0a]/95 backdrop-blur-lg border-t border-[#252525]">
+        <div className="bg-bg/95 backdrop-blur-lg border-t border-border">
           <div className="flex justify-around items-center h-20 max-w-lg mx-auto px-2">
             {navItems.map(({ to, icon: Icon, label }) => (
               <NavLink
@@ -29,15 +29,15 @@ export default function Layout() {
                 className={({ isActive }) =>
                   `group flex flex-col items-center gap-1.5 px-4 py-3 rounded-xl transition-all duration-200 relative ${
                     isActive
-                      ? 'text-[#c8ff00]'
-                      : 'text-[#737373] hover:text-[#fafafa]'
+                      ? 'text-accent'
+                      : 'text-muted hover:text-foreground'
                   }`
                 }
               >
                 {({ isActive }) => (
                   <>
                     {isActive && (
-                      <div className="absolute inset-0 bg-[#c8ff00]/10 rounded-xl" />
+                      <div className="absolute inset-0 bg-accent/10 rounded-xl" />
                     )}
                     <Icon
                       size={22}
