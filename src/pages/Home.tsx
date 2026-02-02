@@ -1,13 +1,10 @@
 import { useNavigate } from 'react-router-dom';
-import { Play, Flame, Target, Trophy, Zap, ChevronRight } from 'lucide-react';
+import { Play, Flame, ChevronRight } from 'lucide-react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import type { Workout } from '../types';
-import { calculateStats } from '../utils/storage';
-
 export default function Home() {
   const navigate = useNavigate();
   const [workouts] = useLocalStorage<Workout[]>('workout-app-workouts', []);
-  const stats = calculateStats(workouts);
 
   const lastWorkout = workouts
     .filter(w => w.completed)
@@ -53,42 +50,6 @@ export default function Home() {
           </div>
         </div>
       </button>
-
-      {/* Stats Grid */}
-      <div id="stats-grid" className="grid grid-cols-2 gap-4 mb-10">
-        <StatCard
-          id="stat-this-week"
-          icon={<Flame size={18} />}
-          value={stats.thisWeekWorkouts}
-          label="THIS WEEK"
-          color="#ff6b35"
-          delay={0.15}
-        />
-        <StatCard
-          id="stat-total-lifts"
-          icon={<Target size={18} />}
-          value={stats.totalWorkouts}
-          label="TOTAL LIFTS"
-          color="#00d4ff"
-          delay={0.2}
-        />
-        <StatCard
-          id="stat-total-sets"
-          icon={<Trophy size={18} />}
-          value={stats.totalSets}
-          label="TOTAL SETS"
-          color="#ffd000"
-          delay={0.25}
-        />
-        <StatCard
-          id="stat-volume"
-          icon={<Zap size={18} />}
-          value={`${(stats.totalVolume / 1000).toFixed(1)}k`}
-          label="VOLUME LBS"
-          color="#c8ff00"
-          delay={0.3}
-        />
-      </div>
 
       {/* Last Workout Card */}
       {lastWorkout && (
@@ -153,40 +114,6 @@ export default function Home() {
           <p className="text-sm text-muted">Start your first session to track progress</p>
         </div>
       )}
-    </div>
-  );
-}
-
-function StatCard({
-  id,
-  icon,
-  value,
-  label,
-  color,
-  delay,
-}: {
-  id: string;
-  icon: React.ReactNode;
-  value: string | number;
-  label: string;
-  color: string;
-  delay: number;
-}) {
-  return (
-    <div
-      id={id}
-      className="group bg-surface border border-border rounded-xl p-5 hover:border-accent/20 transition-all duration-200 animate-slide-up opacity-0"
-      style={{ animationDelay: `${delay}s`, animationFillMode: 'forwards' }}
-    >
-      <div
-        id={`${id}-icon`}
-        className="w-10 h-10 rounded-lg flex items-center justify-center mb-4 transition-transform duration-200 group-hover:scale-110"
-        style={{ backgroundColor: `${color}20`, color }}
-      >
-        {icon}
-      </div>
-      <p id={`${id}-value`} className="font-display text-4xl text-foreground leading-none">{value}</p>
-      <p id={`${id}-label`} className="text-[11px] text-muted tracking-widest mt-2 font-medium">{label}</p>
     </div>
   );
 }

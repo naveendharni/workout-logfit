@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, X, Search, Check, Timer, ChevronDown } from 'lucide-react';
+import { Plus, X, Search, Check, Timer, ChevronDown, Play, Pause, Square } from 'lucide-react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useTimer, formatTime } from '../hooks/useTimer';
 import type { Workout, WorkoutExercise, Exercise } from '../types';
@@ -15,6 +15,7 @@ export default function WorkoutPage() {
   const [currentWorkout, setCurrentWorkout] = useLocalStorage<Workout | null>('workout-app-current', null);
   const [showExerciseModal, setShowExerciseModal] = useState(false);
   const [showRestTimer, setShowRestTimer] = useState(false);
+  const [timerEnabled, setTimerEnabled] = useState(false);
   const { seconds, isRunning, start, pause, reset } = useTimer(0, false);
 
   useEffect(() => {
@@ -27,23 +28,31 @@ export default function WorkoutPage() {
         completed: false,
       };
       setCurrentWorkout(newWorkout);
-      start();
-    } else if (!isRunning) {
-      start();
     }
   }, []);
 
-  const addExercise = (exercise: Exercise) => {
-    if (!currentWorkout) return;
-    const newExercise: WorkoutExercise = {
+  const toggleTimer = () => {
+    if (!timerEnabled) {
+      setTimerEnabled(true);
+      start();
+    } else if (isRunning) {
+      pause();
+    } else {
+      start();
+    }
+  };
+
+  const addExercises = (selected: Exercise[]) => {
+    if (!currentWorkout || selected.length === 0) return;
+    const newExercises: WorkoutExercise[] = selected.map(exercise => ({
       id: generateId(),
       exerciseId: exercise.id,
       exerciseName: exercise.name,
       sets: [{ id: generateId(), reps: 10, weight: 0, completed: false }],
-    };
+    }));
     setCurrentWorkout({
       ...currentWorkout,
-      exercises: [...currentWorkout.exercises, newExercise],
+      exercises: [...currentWorkout.exercises, ...newExercises],
     });
     setShowExerciseModal(false);
   };
@@ -68,10 +77,10 @@ export default function WorkoutPage() {
 
   const finishWorkout = () => {
     if (!currentWorkout) return;
-    pause();
+    if (timerEnabled) pause();
     const completedWorkout: Workout = {
       ...currentWorkout,
-      duration: seconds,
+      duration: timerEnabled ? seconds : 0,
       completed: true,
     };
     setWorkouts([...workouts, completedWorkout]);
@@ -111,7 +120,35 @@ export default function WorkoutPage() {
             </div>
           </div>
           <div id="workout-stats" className="flex items-center gap-4 text-sm text-muted">
-            <span id="workout-timer" className="font-mono text-accent font-semibold">{formatTime(seconds)}</span>
+            <button
+              id="workout-timer-toggle"
+              onClick={toggleTimer}
+              className={`flex items-center gap-1.5 font-mono font-semibold transition-all duration-200 ${
+                timerEnabled ? 'text-accent' : 'text-muted hover:text-foreground'
+              }`}
+            >
+              {timerEnabled ? (
+                <>
+                  {isRunning ? <Pause size={14} /> : <Play size={14} />}
+                  {formatTime(seconds)}
+                </>
+              ) : (
+                <>
+                  <Timer size={14} />
+                  <span className="text-xs tracking-wider">TIMER</span>
+                </>
+              )}
+            </button>
+            {timerEnabled && (
+              <button
+                id="workout-timer-stop"
+                onClick={() => { reset(); setTimerEnabled(false); }}
+                className="text-muted hover:text-danger transition-colors duration-200"
+                title="Stop timer"
+              >
+                <Square size={14} fill="currentColor" />
+              </button>
+            )}
             <span id="workout-sets-count" className="flex items-center gap-1">
               <Check size={14} className="text-success" />
               {completedSets}/{totalSets} sets
@@ -206,7 +243,7 @@ export default function WorkoutPage() {
       {/* Exercise Modal */}
       {showExerciseModal && (
         <ExerciseModal
-          onSelect={addExercise}
+          onSelect={addExercises}
           onClose={() => setShowExerciseModal(false)}
         />
       )}
@@ -218,11 +255,12 @@ function ExerciseModal({
   onSelect,
   onClose,
 }: {
-  onSelect: (exercise: Exercise) => void;
+  onSelect: (exercises: Exercise[]) => void;
   onClose: () => void;
 }) {
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const categories = ['chest', 'back', 'legs', 'shoulders', 'arms', 'core'];
 
@@ -231,6 +269,20 @@ function ExerciseModal({
     const matchesCategory = !selectedCategory || e.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
+
+  const toggleSelect = (id: string) => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleAdd = () => {
+    const exercises = exerciseList.filter(e => selected.has(e.id));
+    onSelect(exercises);
+  };
 
   return (
     <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-end animate-fade-in">
@@ -290,26 +342,51 @@ function ExerciseModal({
         {/* Exercise List */}
         <div className="flex-1 overflow-y-auto p-5">
           <div className="space-y-2">
-            {filtered.map((exercise, index) => (
-              <button
-                key={exercise.id}
-                onClick={() => onSelect(exercise)}
-                className="group w-full text-left p-4 rounded-xl bg-surface border border-border hover:border-accent/30 hover:bg-surface-elevated transition-all duration-200 animate-fade-in opacity-0"
-                style={{ animationDelay: `${index * 0.02}s`, animationFillMode: 'forwards' }}
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-semibold text-foreground group-hover:text-accent transition-colors duration-200">
-                      {exercise.name}
-                    </p>
-                    <p className="text-xs text-muted uppercase tracking-wider mt-0.5">{exercise.category}</p>
+            {filtered.map((exercise, index) => {
+              const isSelected = selected.has(exercise.id);
+              return (
+                <button
+                  key={exercise.id}
+                  onClick={() => toggleSelect(exercise.id)}
+                  className={`group w-full text-left p-4 rounded-xl border transition-all duration-200 animate-fade-in opacity-0 ${
+                    isSelected
+                      ? 'bg-accent/10 border-accent/40'
+                      : 'bg-surface border-border hover:border-accent/30 hover:bg-surface-elevated'
+                  }`}
+                  style={{ animationDelay: `${index * 0.02}s`, animationFillMode: 'forwards' }}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className={`font-semibold transition-colors duration-200 ${
+                        isSelected ? 'text-accent' : 'text-foreground group-hover:text-accent'
+                      }`}>
+                        {exercise.name}
+                      </p>
+                      <p className="text-xs text-muted uppercase tracking-wider mt-0.5">{exercise.category}</p>
+                    </div>
+                    {isSelected ? (
+                      <Check size={18} className="text-accent" />
+                    ) : (
+                      <Plus size={18} className="text-muted group-hover:text-accent transition-colors duration-200" />
+                    )}
                   </div>
-                  <Plus size={18} className="text-muted group-hover:text-accent transition-colors duration-200" />
-                </div>
-              </button>
-            ))}
+                </button>
+              );
+            })}
           </div>
         </div>
+
+        {/* Add Selected Button */}
+        {selected.size > 0 && (
+          <div className="p-5 border-t border-border">
+            <button
+              onClick={handleAdd}
+              className="w-full py-4 rounded-xl bg-accent text-black font-semibold text-base active:scale-[0.98] transition-transform duration-150"
+            >
+              Add {selected.size} Exercise{selected.size > 1 ? 's' : ''}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
