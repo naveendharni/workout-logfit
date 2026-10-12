@@ -1,0 +1,21 @@
+services:
+  db:
+    image: postgres:17
+    container_name: logfit-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-logfit}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-logfit}
+    ports:
+      - "${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - logfit-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 2s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  logfit-pgdata:

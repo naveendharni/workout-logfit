@@ -1,0 +1,153 @@
+generator client {
+  provider           = "prisma-client"
+  output             = "../src/generated/prisma"
+  runtime            = "nodejs"
+  moduleFormat       = "esm"
+  importFileExtension = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum WeightUnit {
+  KG
+  LB
+}
+
+enum MuscleGroup {
+  CHEST
+  BACK
+  SHOULDERS
+  BICEPS
+  TRICEPS
+  FOREARMS
+  QUADS
+  HAMSTRINGS
+  GLUTES
+  CALVES
+  CORE
+  FULL_BODY
+}
+
+enum Equipment {
+  BARBELL
+  DUMBBELL
+  MACHINE
+  CABLE
+  BODYWEIGHT
+  KETTLEBELL
+  BAND
+  SMITH_MACHINE
+  EZ_BAR
+  OTHER
+}
+
+model User {
+  id           String     @id @default(uuid()) @db.Uuid
+  // Stored lowercased so lookups are case-insensitive.
+  email        String     @unique
+  passwordHash String     @map("password_hash")
+  unit         WeightUnit @default(KG)
+  // Throwaway "Try the demo" users, deleted by a cleanup job.
+  isDemo       Boolean    @default(false) @map("is_demo")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  workouts        Workout[]
+  customExercises Exercise[]
+  refreshTokens   RefreshToken[]
+
+  @@index([isDemo, createdAt])
+  @@map("users")
+}
+
+model Exercise {
+  id          String      @id @default(uuid()) @db.Uuid
+  // Stable key for built-in exercises. Matches the old localStorage ids so imports can map them. Null for custom ones.
+  slug        String?     @unique
+  name        String
+  muscleGroup MuscleGroup @map("muscle_group")
+  equipment   Equipment
+  // Null for built-in exercises, set for a user's custom exercise.
+  userId      String?     @map("user_id") @db.Uuid
+  createdAt   DateTime    @default(now()) @map("created_at")
+
+  user             User?             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workoutExercises WorkoutExercise[]
+
+  @@index([userId])
+  @@map("exercises")
+}
+
+model Workout {
+  id          String    @id @default(uuid()) @db.Uuid
+  userId      String    @map("user_id") @db.Uuid
+  // Id generated on the device. Unique per user so a retried save or a repeated import never creates duplicates.
+  clientId    String?   @map("client_id")
+  name        String?
+  notes       String?
+  startedAt   DateTime  @map("started_at")
+  endedAt     DateTime? @map("ended_at")
+  durationSec Int       @default(0) @map("duration_sec")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exercises WorkoutExercise[]
+
+  @@unique([userId, clientId])
+  @@index([userId, startedAt(sort: Desc)])
+  @@map("workouts")
+}
+
+model WorkoutExercise {
+  id         String  @id @default(uuid()) @db.Uuid
+  workoutId  String  @map("workout_id") @db.Uuid
+  exerciseId String  @map("exercise_id") @db.Uuid
+  position   Int
+  notes      String?
+
+  workout  Workout      @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+  // Restrict: an exercise used in history can't be deleted out from under it.
+  exercise Exercise     @relation(fields: [exerciseId], references: [id], onDelete: Restrict)
+  sets     WorkoutSet[]
+
+  @@index([workoutId, position])
+  @@index([exerciseId])
+  @@map("workout_exercises")
+}
+
+model WorkoutSet {
+  id                String  @id @default(uuid()) @db.Uuid
+  workoutExerciseId String  @map("workout_exercise_id") @db.Uuid
+  position          Int
+  reps              Int
+  // Always stored in kg. The kg/lb setting only changes display and input.
+  weightKg          Decimal @default(0) @map("weight_kg") @db.Decimal(7, 3)
+  completed         Boolean @default(false)
+
+  workoutExercise WorkoutExercise @relation(fields: [workoutExerciseId], references: [id], onDelete: Cascade)
+
+  @@index([workoutExerciseId, position])
+  @@map("workout_sets")
+}
+
+model RefreshToken {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @map("user_id") @db.Uuid
+  // SHA-256 of the token. The raw token only ever lives in the cookie.
+  tokenHash  String    @unique @map("token_hash")
+  // Every token from one login shares a family. Reusing a rotated token revokes the whole family.
+  familyId   String    @map("family_id") @db.Uuid
+  expiresAt  DateTime  @map("expires_at")
+  revokedAt  DateTime? @map("revoked_at")
+  replacedBy String?   @map("replaced_by") @db.Uuid
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([familyId])
+  @@map("refresh_tokens")
+}

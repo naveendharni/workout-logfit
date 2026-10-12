@@ -60,11 +60,7 @@ export default function Timer({
   );
 }
 
-interface RestTimerProps {
-  onComplete?: () => void;
-}
-
-export function RestTimer(_props: RestTimerProps) {
+export function RestTimer() {
   const presets = [30, 60, 90, 120];
   const { seconds, isRunning, start, pause, reset, setTime } = useTimer(60, true);
 

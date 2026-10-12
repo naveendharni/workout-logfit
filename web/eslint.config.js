@@ -18,6 +18,8 @@ export default defineConfig([
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,
+      // Two workspaces each have a tsconfig, so tell the parser which folder this config belongs to.
+      parserOptions: { tsconfigRootDir: import.meta.dirname },
     },
   },
 ])

@@ -19,17 +19,14 @@ export default function WorkoutPage() {
   const { seconds, isRunning, start, pause, reset } = useTimer(0, false);
 
   useEffect(() => {
-    if (!currentWorkout) {
-      const newWorkout: Workout = {
-        id: generateId(),
-        date: new Date().toISOString(),
-        duration: 0,
-        exercises: [],
-        completed: false,
-      };
-      setCurrentWorkout(newWorkout);
-    }
-  }, []);
+    setCurrentWorkout(prev => prev ?? {
+      id: generateId(),
+      date: new Date().toISOString(),
+      duration: 0,
+      exercises: [],
+      completed: false,
+    });
+  }, [setCurrentWorkout]);
 
   const toggleTimer = () => {
     if (!timerEnabled) {

@@ -23,3 +23,11 @@ dist-ssr
 *.sln
 *.sw?
 .vercel
+
+# Env files
+.env
+.env.*
+!.env.example
+
+# Prisma generated client
+api/src/generated
