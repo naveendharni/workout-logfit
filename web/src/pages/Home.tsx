@@ -1,9 +1,11 @@
 import { useNavigate } from 'react-router-dom';
-import { Play, Flame, ChevronRight } from 'lucide-react';
+import { Play, Flame, ChevronRight, LogOut } from 'lucide-react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import type { Workout } from '../types';
+import { useAuth } from '../auth/useAuth';
 export default function Home() {
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const [workouts] = useLocalStorage<Workout[]>('workout-app-workouts', []);
 
   const lastWorkout = workouts
@@ -14,9 +16,22 @@ export default function Home() {
     <div id="home-page" className="min-h-screen p-6 max-w-lg mx-auto">
       {/* Header with dramatic typography */}
       <header id="home-header" className="mb-4 animate-slide-up opacity-0" style={{ animationDelay: '0s', animationFillMode: 'forwards' }}>
-        <div id="status-indicator" className="flex items-center gap-2 mb-1">
-          <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-          <span className="text-xs font-medium text-muted tracking-widest uppercase">Ready to train</span>
+        <div className="flex items-center justify-between gap-3 mb-1">
+          <div id="status-indicator" className="flex items-center gap-2 min-w-0">
+            <div className="w-2 h-2 rounded-full bg-accent animate-pulse shrink-0" />
+            <span className="text-xs font-medium text-muted tracking-widest uppercase truncate">Ready to train</span>
+          </div>
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-xs text-muted truncate max-w-[10rem]" title={user?.email}>{user?.email}</span>
+            <button
+              id="logout-btn"
+              onClick={logout}
+              aria-label="Log out"
+              className="p-2 rounded-lg text-muted hover:text-foreground hover:bg-surface-elevated transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            >
+              <LogOut size={16} />
+            </button>
+          </div>
         </div>
         <h1 id="brand-title" className="text-5xl font-bold text-foreground leading-none tracking-tight">
           logfit<span className="text-accent">.</span>io

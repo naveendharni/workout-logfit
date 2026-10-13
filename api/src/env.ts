@@ -6,6 +6,8 @@ const schema = z.object({
   PORT: z.coerce.number().int().positive().default(4000),
   DATABASE_URL: z.url(),
   WEB_ORIGIN: z.url().default('http://localhost:5173'),
+  JWT_ACCESS_SECRET: z.string().min(32),
+  TRUST_PROXY: z.coerce.number().int().min(0).default(0),
 });
 
 const parsed = schema.safeParse(process.env);
@@ -17,3 +19,5 @@ if (!parsed.success) {
 }
 
 export const env = parsed.data;
+
+export const isProduction = env.NODE_ENV === 'production';

@@ -151,3 +151,13 @@ model RefreshToken {
   @@index([familyId])
   @@map("refresh_tokens")
 }
+
+// Fixed-window counters for rate limiting. Kept in Postgres because serverless instances don't share memory.
+model RateLimit {
+  key     String   @id
+  hits    Int
+  resetAt DateTime @map("reset_at")
+
+  @@index([resetAt])
+  @@map("rate_limits")
+}
