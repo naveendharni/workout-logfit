@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "prisma generate && tsc -p tsconfig.build.json",
+    "build": "prisma generate && tsc -p tsconfig.build.json && node scripts/write-dist-package.mjs",
     "start": "node dist/server.js",
     "lint": "eslint .",
     "typecheck": "prisma generate && tsc --noEmit",
