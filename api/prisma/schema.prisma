@@ -110,6 +110,7 @@ model WorkoutExercise {
 
   workout  Workout      @relation(fields: [workoutId], references: [id], onDelete: Cascade)
   // Restrict: an exercise used in history can't be deleted out from under it.
+  // Because of this, deleting a user must delete their workouts before the user (see services/users.ts).
   exercise Exercise     @relation(fields: [exerciseId], references: [id], onDelete: Restrict)
   sets     WorkoutSet[]
 

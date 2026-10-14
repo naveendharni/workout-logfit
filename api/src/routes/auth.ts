@@ -6,9 +6,9 @@ import { prisma } from '../lib/db.js';
 import { HttpError } from '../lib/http-error.js';
 import { hashPassword, verifyAgainstDummy, verifyPassword } from '../lib/password.js';
 import { ACCESS_TOKEN_TTL_SEC, REFRESH_TOKEN_TTL_MS, signAccessToken } from '../lib/tokens.js';
-import { loginLimiter, refreshLimiter, signupLimiter } from '../middleware/rate-limit.js';
-import { getUserId, requireAuth } from '../middleware/require-auth.js';
+import { demoLimiter, loginLimiter, refreshLimiter, signupLimiter } from '../middleware/rate-limit.js';
 import { requireSameOrigin } from '../middleware/same-origin.js';
+import { createDemoUser } from '../services/demo.js';
 import { createSession, endSession, rotateSession } from '../services/session.js';
 
 export const authRouter = Router();
@@ -35,9 +35,14 @@ const loginBody = z.object({
   password: z.string().min(1, 'Enter your password').max(128),
 });
 
-type PublicUser = { id: string; email: string; unit: 'KG' | 'LB' };
+type PublicUser = { id: string; email: string; unit: 'KG' | 'LB'; isDemo: boolean };
 
-const toPublicUser = (user: PublicUser): PublicUser => ({ id: user.id, email: user.email, unit: user.unit });
+const toPublicUser = (user: PublicUser): PublicUser => ({
+  id: user.id,
+  email: user.email,
+  unit: user.unit,
+  isDemo: user.isDemo,
+});
 
 // Every successful auth response has the same shape: a new access token in the body, a new refresh token in the cookie.
 const sendSession = async (res: Response, user: PublicUser, refreshToken: string, status = 200) => {
@@ -85,6 +90,13 @@ authRouter.post('/login', requireSameOrigin, loginLimiter, async (req, res) => {
   await sendSession(res, user, await createSession(user.id));
 });
 
+// "Try the demo": a fresh throwaway account with a few weeks of workouts, logged in straight away.
+// Each visitor gets their own copy, so nobody can wreck the demo for the next person.
+authRouter.post('/demo', requireSameOrigin, demoLimiter, async (_req, res) => {
+  const user = await createDemoUser();
+  await sendSession(res, user, await createSession(user.id), 201);
+});
+
 authRouter.post('/refresh', requireSameOrigin, refreshLimiter, async (req, res) => {
   const token = readRefreshCookie(req.cookies);
   if (!token) throw new HttpError(401, 'No session');
@@ -105,10 +117,4 @@ authRouter.post('/logout', requireSameOrigin, async (req, res) => {
   if (token) await endSession(token);
   clearRefreshCookie(res);
   res.status(204).end();
-});
-
-authRouter.get('/me', requireAuth, async (req, res) => {
-  const user = await prisma.user.findUnique({ where: { id: getUserId(req) } });
-  if (!user) throw new HttpError(401, 'Not authenticated');
-  res.json({ user: toPublicUser(user) });
 });

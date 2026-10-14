@@ -2,6 +2,7 @@ import { useId, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { ApiError } from '../lib/api';
+import TryDemoButton from './TryDemoButton';
 
 type Props = {
   mode: 'login' | 'signup';
@@ -169,6 +170,15 @@ export default function AuthForm({ mode, onSubmit }: Props) {
           )}
         </button>
       </form>
+
+      <div className="mt-6 animate-fade-in opacity-0" style={{ animationDelay: '0.15s', animationFillMode: 'forwards' }}>
+        <div className="flex items-center gap-3 mb-6" aria-hidden="true">
+          <div className="flex-1 h-px bg-border" />
+          <span className="text-[10px] font-semibold text-muted tracking-widest">OR</span>
+          <div className="flex-1 h-px bg-border" />
+        </div>
+        <TryDemoButton />
+      </div>
 
       <p className="text-sm text-muted text-center mt-8 animate-fade-in opacity-0" style={{ animationDelay: '0.2s', animationFillMode: 'forwards' }}>
         {text.switchText}{' '}

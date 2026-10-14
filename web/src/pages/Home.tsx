@@ -1,16 +1,18 @@
 import { useNavigate } from 'react-router-dom';
 import { Play, Flame, ChevronRight, LogOut } from 'lucide-react';
-import { useLocalStorage } from '../hooks/useLocalStorage';
 import type { Workout } from '../types';
 import { useAuth } from '../auth/useAuth';
+import { useApi } from '../hooks/useApi';
+import { readDraft } from '../lib/draft';
+import ImportBanner from '../components/ImportBanner';
+import UnitToggle from '../components/UnitToggle';
+import { ErrorState } from '../components/StateViews';
 export default function Home() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const [workouts] = useLocalStorage<Workout[]>('workout-app-workouts', []);
-
-  const lastWorkout = workouts
-    .filter(w => w.completed)
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
+  const { data, error, loading, reload } = useApi<{ workouts: Workout[] }>('/workouts?limit=1');
+  const lastWorkout = data?.workouts[0];
+  const hasDraft = Boolean(user && readDraft(user.id)?.exercises.length);
 
   return (
     <div id="home-page" className="min-h-screen p-6 max-w-lg mx-auto">
@@ -21,8 +23,8 @@ export default function Home() {
             <div className="w-2 h-2 rounded-full bg-accent animate-pulse shrink-0" />
             <span className="text-xs font-medium text-muted tracking-widest uppercase truncate">Ready to train</span>
           </div>
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="text-xs text-muted truncate max-w-[10rem]" title={user?.email}>{user?.email}</span>
+          <div className="flex items-center gap-2 shrink-0">
+            <UnitToggle />
             <button
               id="logout-btn"
               onClick={logout}
@@ -37,6 +39,11 @@ export default function Home() {
           logfit<span className="text-accent">.</span>io
         </h1>
         <p id="tagline" className="text-muted mt-2 text-sm">Track your gains.</p>
+        {user?.isDemo ? (
+          <p className="text-xs text-info mt-1">Demo account. Explore freely, it's deleted after 7 days.</p>
+        ) : (
+          <p className="text-xs text-muted/80 mt-1 truncate">Signed in as {user?.email}</p>
+        )}
       </header>
 
       {/* Hero Start Button */}
@@ -56,8 +63,8 @@ export default function Home() {
           <div id="accent-bottom" className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2" />
 
           <div id="btn-text" className="relative z-10 text-left">
-            <p className="font-display text-4xl text-black tracking-wide">START WORKOUT</p>
-            <p className="text-black/60 text-base mt-2 font-medium">Begin a new session</p>
+            <p className="font-display text-4xl text-black tracking-wide">{hasDraft ? 'RESUME WORKOUT' : 'START WORKOUT'}</p>
+            <p className="text-black/60 text-base mt-2 font-medium">{hasDraft ? 'Pick up your session' : 'Begin a new session'}</p>
           </div>
 
           <div id="btn-icon" className="relative z-10 bg-black rounded-full p-5 group-hover:scale-110 transition-transform duration-200">
@@ -65,6 +72,14 @@ export default function Home() {
           </div>
         </div>
       </button>
+
+      <ImportBanner onImported={reload} />
+
+      {/* Last session: loading and error states */}
+      {loading && !data && (
+        <div className="h-28 rounded-xl bg-surface border border-border animate-pulse" role="status" aria-label="Loading last session" />
+      )}
+      {error && !data && <ErrorState message="Couldn't load your last session." onRetry={reload} />}
 
       {/* Last Workout Card */}
       {lastWorkout && (
@@ -92,7 +107,7 @@ export default function Home() {
             <div id="last-workout-content" className="flex justify-between items-start">
               <div id="last-workout-info">
                 <p className="font-semibold text-lg text-foreground">
-                  {new Date(lastWorkout.date).toLocaleDateString('en-US', {
+                  {new Date(lastWorkout.startedAt).toLocaleDateString('en-US', {
                     weekday: 'long',
                     month: 'short',
                     day: 'numeric',
@@ -116,7 +131,7 @@ export default function Home() {
       )}
 
       {/* Empty State */}
-      {workouts.length === 0 && (
+      {data && !lastWorkout && (
         <div
           id="empty-state"
           className="text-center py-16 animate-fade-in opacity-0"

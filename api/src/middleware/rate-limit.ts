@@ -18,3 +18,4 @@ const limiter = (prefix: string, windowMs: number, limit: number, skipSuccessful
 export const loginLimiter = limiter('login:', 15 * MINUTE, 10, true);
 export const signupLimiter = limiter('signup:', 60 * MINUTE, 5);
 export const refreshLimiter = limiter('refresh:', 15 * MINUTE, 60);
+export const demoLimiter = limiter('demo:', 60 * MINUTE, 10);

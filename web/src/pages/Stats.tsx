@@ -1,16 +1,19 @@
 import { Trophy, Flame, Target, TrendingUp, Zap } from 'lucide-react';
-import { useLocalStorage } from '../hooks/useLocalStorage';
-import type { Workout } from '../types';
-import { calculateStats } from '../utils/storage';
+import type { Stats as StatsData } from '../types';
 import StatsChart from '../components/StatsChart';
+import { useApi } from '../hooks/useApi';
+import { useAuth } from '../auth/useAuth';
+import { formatVolume, formatWeight, unitLabel } from '../lib/units';
+import { EmptyState, ErrorState, LoadingState } from '../components/StateViews';
+
+// The browser's time zone, so "today" and each chart bar match the user's calendar.
+const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 export default function Stats() {
-  const [workouts] = useLocalStorage<Workout[]>('workout-app-workouts', []);
-  const stats = calculateStats(workouts);
-
-  const completedWorkouts = workouts.filter(w => w.completed);
-
-  const personalRecords = getPersonalRecords(completedWorkouts);
+  const { user } = useAuth();
+  const unit = user?.unit ?? 'KG';
+  const { data: stats, error, loading, reload } = useApi<StatsData>(`/stats?tz=${encodeURIComponent(timeZone)}`);
+  const personalRecords = stats?.personalRecords ?? [];
 
   return (
     <div id="stats-page" className="min-h-screen px-6 pt-14 pb-10 max-w-lg mx-auto">
@@ -25,6 +28,14 @@ export default function Stats() {
         </h1>
       </header>
 
+      {loading && !stats ? (
+        <LoadingState label="Crunching your numbers" />
+      ) : error && !stats ? (
+        <ErrorState message="Couldn't load your stats." onRetry={reload} />
+      ) : stats && stats.totalWorkouts === 0 ? (
+        <EmptyState icon={<TrendingUp size={28} />} title="No stats yet" text="Complete workouts to see your progress" />
+      ) : stats ? (
+        <>
       {/* Stats Grid */}
       <div id="stats-grid" className="grid grid-cols-2 gap-3 mb-8">
         <StatCard
@@ -43,8 +54,8 @@ export default function Stats() {
         />
         <StatCard
           icon={<TrendingUp size={18} />}
-          value={`${(stats.totalVolume / 1000).toFixed(1)}k`}
-          label="VOLUME LBS"
+          value={formatVolume(stats.totalVolumeKg, unit)}
+          label={`VOLUME ${unitLabel(unit).toUpperCase()}`}
           color="#c8ff00"
           delay={0.2}
         />
@@ -63,7 +74,7 @@ export default function Stats() {
         className="mb-8 animate-slide-up opacity-0"
         style={{ animationDelay: '0.3s', animationFillMode: 'forwards' }}
       >
-        <StatsChart workouts={completedWorkouts} days={7} />
+        <StatsChart days={stats.days} unit={unit} />
       </div>
 
       {/* Personal Records */}
@@ -96,7 +107,7 @@ export default function Stats() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-display text-2xl text-accent">{pr.weight}<span className="text-sm text-muted ml-1">lbs</span></p>
+                  <p className="font-display text-2xl text-accent">{formatWeight(pr.weightKg, unit)}<span className="text-sm text-muted ml-1">{unitLabel(unit)}</span></p>
                   <p className="text-xs text-muted">× {pr.reps} reps</p>
                 </div>
               </div>
@@ -105,20 +116,8 @@ export default function Stats() {
         </div>
       )}
 
-      {/* Empty State */}
-      {completedWorkouts.length === 0 && (
-        <div
-          id="stats-empty-state"
-          className="text-center py-16 animate-fade-in opacity-0"
-          style={{ animationDelay: '0.3s', animationFillMode: 'forwards' }}
-        >
-          <div id="stats-empty-icon" className="w-16 h-16 rounded-full bg-surface-elevated border border-border flex items-center justify-center mx-auto mb-4">
-            <TrendingUp size={28} className="text-muted" />
-          </div>
-          <p className="text-foreground font-medium mb-1">No stats yet</p>
-          <p className="text-sm text-muted">Complete workouts to see your progress</p>
-        </div>
-      )}
+        </>
+      ) : null}
     </div>
   );
 }
@@ -151,38 +150,4 @@ function StatCard({
       <p className="text-[10px] text-muted tracking-widest mt-1.5 font-medium">{label}</p>
     </div>
   );
-}
-
-interface PersonalRecord {
-  exercise: string;
-  weight: number;
-  reps: number;
-}
-
-function getPersonalRecords(workouts: Workout[]): PersonalRecord[] {
-  const records: Map<string, PersonalRecord> = new Map();
-
-  workouts.forEach(workout => {
-    workout.exercises.forEach(exercise => {
-      exercise.sets.forEach(set => {
-        if (!set.completed || set.weight === 0) return;
-
-        const existing = records.get(exercise.exerciseName);
-        const volume = set.weight * set.reps;
-        const existingVolume = existing ? existing.weight * existing.reps : 0;
-
-        if (!existing || volume > existingVolume) {
-          records.set(exercise.exerciseName, {
-            exercise: exercise.exerciseName,
-            weight: set.weight,
-            reps: set.reps,
-          });
-        }
-      });
-    });
-  });
-
-  return Array.from(records.values())
-    .sort((a, b) => b.weight * b.reps - a.weight * a.reps)
-    .slice(0, 5);
 }

@@ -2,24 +2,26 @@
 
 A mobile-first workout tracker. Log your sets, reps and weights during a session, use the built-in rest timer, and review your history and progress over time. Your account keeps your workouts in sync on every device.
 
-> **Status:** in active development. The app, API, database and login are working locally. Saving workouts to the database, the installable phone app, tests and the live deployment are next (see [Roadmap](#roadmap)).
+> **Status:** in active development. Accounts, workouts in the database, stats and the demo all work locally. The installable phone app, automated tests and the live deployment are next (see [Roadmap](#roadmap)).
 
 ## Features
 
 **Working now**
+- **Try the demo**: one tap, no sign-up, comes with 4 weeks of sample workouts
 - Sign up, log in and log out, with sessions that survive a page reload
-- Start a workout, add exercises, log sets with reps and weight
+- Log workouts with sets, reps and weight; your workouts sync across devices
+- Exercise picker with search, muscle group and equipment filters, plus your own custom exercises
+- kg / lb setting
+- Edit or delete past workouts in the Log
+- Stats: weekly volume chart, totals and personal records
 - Rest timer with 30, 60, 90 and 120 second presets
-- Workout history (Log) and weekly stats with a chart
-- Dark, mobile-first UI
+- Works with bad gym signal: the workout in progress is kept on the device until it's saved
+- One-tap import of workouts saved in the browser before you had an account
 
 **Coming next**
-- Workouts stored in the database instead of the browser, so they follow you across devices
-- Exercise picker with search plus muscle group and equipment filters, and custom exercises
-- kg / lb setting
-- One-tap import of workouts saved in the browser before you had an account
 - Installable on iOS and Android home screens (PWA)
-- "Try the demo" button with a few weeks of sample workouts
+- Accessibility and mobile polish pass
+- Automated tests and a live deployment
 
 ## Tech stack
 
@@ -53,7 +55,6 @@ Express API ──► Prisma ──► PostgreSQL
 5. If an old refresh token is ever reused, the server treats it as possible theft and ends that whole session (**reuse detection**).
 6. Login, sign-up and refresh are **rate limited** per IP.
 
-
 ## API
 
 | Method | Route | Auth | Description |
@@ -61,9 +62,16 @@ Express API ──► Prisma ──► PostgreSQL
 | GET | `/api/health` | none | API and database status |
 | POST | `/api/auth/signup` | none | Create an account, start a session |
 | POST | `/api/auth/login` | none | Log in, start a session |
+| POST | `/api/auth/demo` | none | Start a throwaway demo account |
 | POST | `/api/auth/refresh` | refresh cookie | Get a new access token, rotate the refresh token |
 | POST | `/api/auth/logout` | refresh cookie | End this device's session |
-| GET | `/api/auth/me` | access token | Current user |
+| GET, PATCH | `/api/me` | access token | Current user, change kg/lb |
+| GET, POST | `/api/exercises` | access token | List exercises, create a custom one |
+| DELETE | `/api/exercises/:id` | access token | Delete a custom exercise |
+| GET, POST | `/api/workouts` | access token | List (paged), save a new workout |
+| GET, PUT, DELETE | `/api/workouts/:id` | access token | Read, replace or delete a workout |
+| POST | `/api/workouts/import` | access token | Import workouts from the old browser-only app |
+| GET | `/api/stats` | access token | Totals, last 7 days, personal records |
 
 ## Run it locally
 
@@ -105,21 +113,22 @@ Express API ──► Prisma ──► PostgreSQL
 ```
 api/              Express API
   prisma/         Database schema, migrations, exercise seed data
-  src/routes/     HTTP routes (health, auth)
-  src/services/   Business logic (sessions and token rotation)
+  src/routes/     HTTP routes (auth, me, exercises, workouts, stats)
+  src/services/   Business logic (sessions, workouts, demo data)
   src/middleware/ Auth, rate limiting, Origin check, error handling
   src/lib/        Database client, password hashing, tokens
 web/              React app
   src/pages/      Screens (Home, Lift, Log, Stats, Log in, Sign up)
+  src/components/ Exercise picker, set rows, import banner, demo button
   src/auth/       Login state and protected routes
-  src/lib/api.ts  API client: access token in memory, silent refresh
+  src/lib/        API client, kg/lb units, workout draft
 ```
 
 ## Roadmap
 
 - [x] API, database and seed data
 - [x] Accounts and secure login
-- [ ] Workouts saved to the database, exercise picker, kg/lb, import
+- [x] Workouts saved to the database, exercise picker, kg/lb, import, demo
 - [ ] Installable phone app and accessibility pass
 - [ ] Automated tests (API and end-to-end)
-- [ ] Live deployment and demo account
+- [ ] Live deployment

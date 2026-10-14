@@ -2,7 +2,7 @@
 // not in localStorage, not in a cookie, so injected scripts or browser extensions reading storage can't find it.
 // It's lost on page reload, and the refresh cookie gets a new one.
 
-export type User = { id: string; email: string; unit: 'KG' | 'LB' };
+export type User = { id: string; email: string; unit: 'KG' | 'LB'; isDemo: boolean };
 
 type Session = { accessToken: string; expiresIn: number; user: User };
 
@@ -89,6 +89,8 @@ const authPost = async (path: string, body: unknown): Promise<Session> => {
 export const signup = (email: string, password: string) => authPost('/auth/signup', { email, password });
 
 export const login = (email: string, password: string) => authPost('/auth/login', { email, password });
+
+export const startDemo = () => authPost('/auth/demo', {});
 
 export const logout = async () => {
   accessToken = null;

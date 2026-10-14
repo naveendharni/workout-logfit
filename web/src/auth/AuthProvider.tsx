@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import * as api from '../lib/api';
+import type { Unit } from '../types';
 import { AuthContext, type AuthState } from './auth-context';
 
 export default function AuthProvider({ children }: { children: ReactNode }) {
@@ -8,6 +9,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
   // On app start, try the refresh cookie. If it's valid we're logged in without typing anything (silent refresh).
   useEffect(() => {
     let active = true;
+    console.log('Refreshing session...', {active});
     api.refreshSession().then((session) => {
       if (!active) return;
       setState(session ? { status: 'authenticated', user: session.user } : { status: 'anonymous', user: null });
@@ -32,12 +34,25 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     setState({ status: 'authenticated', user: session.user });
   }, []);
 
+  const startDemo = useCallback(async () => {
+    const session = await api.startDemo();
+    setState({ status: 'authenticated', user: session.user });
+  }, []);
+
   const logout = useCallback(async () => {
     await api.logout();
     setState({ status: 'anonymous', user: null });
   }, []);
 
-  const value = useMemo(() => ({ ...state, login, signup, logout }), [state, login, signup, logout]);
+  const setUnit = useCallback(async (unit: Unit) => {
+    const { user } = await api.apiFetch<{ user: api.User }>('/me', { method: 'PATCH', body: JSON.stringify({ unit }) });
+    setState({ status: 'authenticated', user });
+  }, []);
+
+  const value = useMemo(
+    () => ({ ...state, login, signup, logout, startDemo, setUnit }),
+    [state, login, signup, logout, startDemo, setUnit],
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

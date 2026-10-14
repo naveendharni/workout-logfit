@@ -1,20 +1,103 @@
-import { useState } from 'react';
-import { Calendar, Clock, Dumbbell, ChevronDown, ChevronUp, Zap } from 'lucide-react';
-import { useLocalStorage } from '../hooks/useLocalStorage';
-import type { Workout } from '../types';
+import { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Calendar, Clock, Dumbbell, ChevronDown, ChevronUp, Zap, Pencil, Trash2, Loader2 } from 'lucide-react';
+import type { Stats, Unit, Workout } from '../types';
 import { formatTime } from '../hooks/useTimer';
+import { useApi } from '../hooks/useApi';
+import { useAuth } from '../auth/useAuth';
+import { ApiError, apiFetch } from '../lib/api';
+import { draftFromWorkout, readDraft, writeDraft } from '../lib/draft';
+import { formatVolume, formatWeight, unitLabel } from '../lib/units';
+import { EmptyState, ErrorState, LoadingState } from '../components/StateViews';
+
+type Page = { workouts: Workout[]; nextCursor: string | null };
+
+const PAGE_SIZE = 20;
+
+// First page on mount, then "Load more" appends the next page using the cursor from the last one.
+function useWorkoutPages() {
+  const [workouts, setWorkouts] = useState<Workout[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [moreError, setMoreError] = useState(false);
+  const [version, setVersion] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+    apiFetch<Page>(`/workouts?limit=${PAGE_SIZE}`).then(
+      (page) => {
+        if (!active) return;
+        setWorkouts(page.workouts);
+        setNextCursor(page.nextCursor);
+        setStatus('ready');
+      },
+      () => active && setStatus('error'),
+    );
+    return () => {
+      active = false;
+    };
+  }, [version]);
+
+  const retry = useCallback(() => {
+    setStatus('loading');
+    setVersion((v) => v + 1);
+  }, []);
+
+  const loadMore = async () => {
+    if (!nextCursor) return;
+    setLoadingMore(true);
+    setMoreError(false);
+    try {
+      const page = await apiFetch<Page>(`/workouts?limit=${PAGE_SIZE}&cursor=${nextCursor}`);
+      setWorkouts((prev) => [...prev, ...page.workouts]);
+      setNextCursor(page.nextCursor);
+    } catch {
+      setMoreError(true);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  const remove = (id: string) => setWorkouts((prev) => prev.filter((w) => w.id !== id));
+
+  return { workouts, nextCursor, status, retry, loadMore, loadingMore, moreError, remove };
+}
 
 export default function History() {
-  const [workouts] = useLocalStorage<Workout[]>('workout-app-workouts', []);
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const unit = user?.unit ?? 'KG';
+  const { workouts, nextCursor, status, retry, loadMore, loadingMore, moreError, remove } = useWorkoutPages();
+  const stats = useApi<Stats>('/stats');
   const [expandedId, setExpandedId] = useState<string | null>(null);
-
-  const sortedWorkouts = [...workouts]
-    .filter(w => w.completed)
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const toggleExpand = (id: string) => {
     setExpandedId(expandedId === id ? null : id);
   };
+
+  const editWorkout = (workout: Workout) => {
+    if (!user) return;
+    const existing = readDraft(user.id);
+    if (existing?.exercises.length && !confirm('You have a workout in progress. Replace it with this one to edit?')) return;
+    writeDraft(user.id, draftFromWorkout(workout));
+    navigate('/workout');
+  };
+
+  const deleteWorkout = async (workout: Workout) => {
+    if (!confirm('Delete this workout? This can’t be undone.')) return;
+    setActionError(null);
+    try {
+      await apiFetch(`/workouts/${workout.id}`, { method: 'DELETE' });
+      remove(workout.id);
+      stats.reload();
+    } catch (err) {
+      setActionError(err instanceof ApiError ? err.message : 'Couldn’t delete the workout. Try again.');
+    }
+  };
+
+  const summary = stats.data;
 
   return (
     <div id="history-page" className="min-h-screen px-6 pt-14 pb-10 max-w-lg mx-auto">
@@ -29,63 +112,72 @@ export default function History() {
         </h1>
       </header>
 
-      {/* Stats Summary */}
-      {sortedWorkouts.length > 0 && (
+      {/* Stats Summary (all time, from the server) */}
+      {summary && summary.totalWorkouts > 0 && (
         <div
           id="history-stats-summary"
           className="grid grid-cols-3 gap-3 mb-8 animate-slide-up opacity-0"
           style={{ animationDelay: '0.1s', animationFillMode: 'forwards' }}
         >
           <div id="history-stat-sessions" className="bg-surface border border-border rounded-xl p-4 text-center">
-            <p className="font-display text-2xl text-accent">{sortedWorkouts.length}</p>
+            <p className="font-display text-2xl text-accent">{summary.totalWorkouts}</p>
             <p className="text-[10px] text-muted tracking-widest">SESSIONS</p>
           </div>
           <div id="history-stat-exercises" className="bg-surface border border-border rounded-xl p-4 text-center">
-            <p className="font-display text-2xl text-info">
-              {sortedWorkouts.reduce((acc, w) => acc + w.exercises.length, 0)}
-            </p>
+            <p className="font-display text-2xl text-info">{summary.totalExercises}</p>
             <p className="text-[10px] text-muted tracking-widest">EXERCISES</p>
           </div>
           <div id="history-stat-sets" className="bg-surface border border-border rounded-xl p-4 text-center">
-            <p className="font-display text-2xl text-warning">
-              {sortedWorkouts.reduce((acc, w) =>
-                acc + w.exercises.reduce((eAcc, e) => eAcc + e.sets.filter(s => s.completed).length, 0), 0
-              )}
-            </p>
+            <p className="font-display text-2xl text-warning">{summary.totalSets}</p>
             <p className="text-[10px] text-muted tracking-widest">TOTAL SETS</p>
           </div>
         </div>
       )}
 
+      {actionError && (
+        <p role="alert" className="mb-4 text-sm text-danger">
+          {actionError}
+        </p>
+      )}
+
       {/* Workout List */}
-      {sortedWorkouts.length === 0 ? (
-        <div
-          id="history-empty-state"
-          className="text-center py-20 animate-fade-in opacity-0"
-          style={{ animationDelay: '0.2s', animationFillMode: 'forwards' }}
-        >
-          <div id="history-empty-icon" className="w-16 h-16 rounded-full bg-surface-elevated border border-border flex items-center justify-center mx-auto mb-4">
-            <Calendar size={28} className="text-muted" />
-          </div>
-          <p className="text-foreground font-medium mb-1">No workout history</p>
-          <p className="text-sm text-muted">Complete a workout to see it here</p>
-        </div>
+      {status === 'loading' ? (
+        <LoadingState label="Loading your workouts" />
+      ) : status === 'error' ? (
+        <ErrorState message="Couldn't load your workouts." onRetry={retry} />
+      ) : workouts.length === 0 ? (
+        <EmptyState icon={<Calendar size={28} />} title="No workout history" text="Complete a workout to see it here" />
       ) : (
-        <div id="workout-list" className="space-y-3">
-          {sortedWorkouts.map((workout, index) => (
-            <div
-              key={workout.id}
-              className="animate-slide-up opacity-0"
-              style={{ animationDelay: `${0.15 + index * 0.05}s`, animationFillMode: 'forwards' }}
+        <>
+          <div id="workout-list" className="space-y-3">
+            {workouts.map((workout, index) => (
+              <div
+                key={workout.id}
+                className="animate-slide-up opacity-0"
+                style={{ animationDelay: `${0.15 + Math.min(index, 10) * 0.05}s`, animationFillMode: 'forwards' }}
+              >
+                <WorkoutCard
+                  workout={workout}
+                  unit={unit}
+                  expanded={expandedId === workout.id}
+                  onToggle={() => toggleExpand(workout.id)}
+                  onEdit={() => editWorkout(workout)}
+                  onDelete={() => deleteWorkout(workout)}
+                />
+              </div>
+            ))}
+          </div>
+          {nextCursor && (
+            <button
+              onClick={loadMore}
+              disabled={loadingMore}
+              className="w-full mt-4 py-3.5 rounded-xl bg-surface border border-border text-sm font-medium text-muted hover:text-foreground hover:border-accent/30 flex items-center justify-center gap-2"
             >
-              <WorkoutCard
-                workout={workout}
-                expanded={expandedId === workout.id}
-                onToggle={() => toggleExpand(workout.id)}
-              />
-            </div>
-          ))}
-        </div>
+              {loadingMore && <Loader2 size={14} className="animate-spin" />}
+              {loadingMore ? 'Loading' : moreError ? 'Couldn’t load more. Try again' : 'Load more'}
+            </button>
+          )}
+        </>
       )}
     </div>
   );
@@ -93,12 +185,18 @@ export default function History() {
 
 function WorkoutCard({
   workout,
+  unit,
   expanded,
   onToggle,
+  onEdit,
+  onDelete,
 }: {
   workout: Workout;
+  unit: Unit;
   expanded: boolean;
   onToggle: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
 }) {
   const totalSets = workout.exercises.reduce(
     (acc, e) => acc + e.sets.filter(s => s.completed).length,
@@ -107,16 +205,17 @@ function WorkoutCard({
 
   const totalVolume = workout.exercises.reduce((acc, e) => {
     return acc + e.sets.reduce((setAcc, s) => {
-      return setAcc + (s.completed ? s.reps * s.weight : 0);
+      return setAcc + (s.completed ? s.reps * s.weightKg : 0);
     }, 0);
   }, 0);
 
-  const date = new Date(workout.date);
+  const date = new Date(workout.startedAt);
 
   return (
     <div className="bg-surface rounded-2xl border border-border overflow-hidden hover:border-accent/20 transition-all duration-200">
       <button
         onClick={onToggle}
+        aria-expanded={expanded}
         className="w-full p-5 text-left flex items-center justify-between"
       >
         <div>
@@ -130,7 +229,7 @@ function WorkoutCard({
           <div className="flex items-center gap-4 text-sm text-muted mt-2">
             <span className="flex items-center gap-1.5">
               <Clock size={14} className="text-accent" />
-              <span className="font-mono">{formatTime(workout.duration)}</span>
+              <span className="font-mono">{formatTime(workout.durationSec)}</span>
             </span>
             <span className="flex items-center gap-1.5">
               <Dumbbell size={14} className="text-info" />
@@ -167,7 +266,7 @@ function WorkoutCard({
                 </div>
                 <p className="text-[10px] text-muted tracking-widest">VOLUME</p>
               </div>
-              <p className="font-display text-2xl text-foreground">{totalVolume.toLocaleString()}<span className="text-sm text-muted ml-1">lbs</span></p>
+              <p className="font-display text-2xl text-foreground">{formatVolume(totalVolume, unit)}<span className="text-sm text-muted ml-1">{unitLabel(unit)}</span></p>
             </div>
           </div>
 
@@ -187,7 +286,7 @@ function WorkoutCard({
                     .map((set, index) => (
                       <div key={set.id} className="flex items-center gap-3 text-sm">
                         <span className="font-mono text-muted w-8">#{index + 1}</span>
-                        <span className="font-mono text-foreground">{set.weight}<span className="text-muted ml-0.5">lbs</span></span>
+                        <span className="font-mono text-foreground">{formatWeight(set.weightKg, unit)}<span className="text-muted ml-0.5">{unitLabel(unit)}</span></span>
                         <span className="text-muted">×</span>
                         <span className="font-mono text-accent">{set.reps}<span className="text-muted ml-0.5">reps</span></span>
                       </div>
@@ -195,6 +294,22 @@ function WorkoutCard({
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* Actions */}
+          <div className="grid grid-cols-2 gap-3 mt-5">
+            <button
+              onClick={onEdit}
+              className="py-3 rounded-xl bg-surface-elevated border border-border text-sm font-medium text-foreground hover:border-accent/40 flex items-center justify-center gap-2"
+            >
+              <Pencil size={14} /> Edit
+            </button>
+            <button
+              onClick={onDelete}
+              className="py-3 rounded-xl bg-surface-elevated border border-border text-sm font-medium text-danger hover:border-danger/40 flex items-center justify-center gap-2"
+            >
+              <Trash2 size={14} /> Delete
+            </button>
           </div>
         </div>
       )}
