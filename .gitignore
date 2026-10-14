@@ -31,3 +31,6 @@ dist-ssr
 
 # Prisma generated client
 api/src/generated
+
+# Local docs
+docs/
